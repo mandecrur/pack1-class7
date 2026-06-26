@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 7 — Quiz 1–5</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #EEF2F7;
+    color: #1A2233;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .quiz-wrapper {
+    width: 100%;
+    max-width: 720px;
+  }
+
+  /* Header */
+  .quiz-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .quiz-header .tag {
+    display: inline-block;
+    background: #1A56DB;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.28rem 0.75rem;
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+  }
+  .quiz-header h1 {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 700;
+    color: #0F1A2E;
+  }
+
+  /* Progress */
+  .progress-bar-wrap {
+    background: #D8E2EF;
+    border-radius: 99px;
+    height: 6px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: #1A56DB;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 0.75rem;
+    color: #7A8DAA;
+    text-align: right;
+    margin-bottom: 1.2rem;
+  }
+
+  /* Card */
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  .card-top {
+    padding: 1.4rem 1.6rem 1.2rem;
+    border-bottom: 1px solid #EEF1F6;
+  }
+
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+  .q-num-badge {
+    background: #1A56DB;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 5px;
+  }
+  .q-topic {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #9AAABF;
+  }
+
+  .stem {
+    font-size: 0.95rem;
+    line-height: 1.72;
+    color: #2A3550;
+  }
+  .stem em { font-style: italic; color: #1A56DB; }
+
+  /* Options */
+  .options {
+    padding: 1.2rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    text-align: left;
+    background: #F7F9FC;
+    border: 1.5px solid #DDE4EF;
+    border-radius: 9px;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: #2A3550;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: #1A56DB;
+    background: #EEF4FF;
+    transform: translateY(-1px);
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .option-btn .lbl {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #9AAABF;
+    min-width: 1.4rem;
+    padding-top: 0.05rem;
+    flex-shrink: 0;
+  }
+
+  .option-btn.correct {
+    border-color: #16A34A;
+    background: #F0FDF4;
+  }
+  .option-btn.correct .lbl { color: #16A34A; }
+
+  .option-btn.wrong {
+    border-color: #DC2626;
+    background: #FEF2F2;
+  }
+  .option-btn.wrong .lbl { color: #DC2626; }
+
+  .option-btn em { font-style: italic; color: #1A56DB; }
+
+  /* Feedback */
+  .feedback {
+    display: none;
+    margin: 0 1.6rem 1.2rem;
+    border-radius: 9px;
+    padding: 1rem 1.1rem;
+    font-size: 0.87rem;
+    line-height: 1.65;
+    border-left: 4px solid #16A34A;
+    background: #F0FDF4;
+    color: #14532D;
+    animation: fadeIn 0.25s ease;
+  }
+  .feedback.wrong-fb {
+    border-color: #DC2626;
+    background: #FEF2F2;
+    color: #7F1D1D;
+  }
+  .feedback.show { display: block; }
+  .feedback strong { font-weight: 700; }
+  .feedback em { font-style: italic; color: #1A56DB; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Nav */
+  .card-bottom {
+    padding: 1rem 1.6rem 1.4rem;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #EEF1F6;
+  }
+
+  .btn-next {
+    display: none;
+    background: #1A56DB;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-next:hover { background: #1446B8; transform: translateY(-1px); }
+  .btn-next.show { display: inline-block; }
+
+  /* Score screen */
+  .score-screen {
+    display: none;
+    text-align: center;
+    padding: 2.5rem 1.6rem;
+  }
+  .score-screen.show { display: block; }
+  .score-circle {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #EEF4FF;
+    border: 4px solid #1A56DB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.2rem;
+  }
+  .score-circle .big { font-size: 1.8rem; font-weight: 700; color: #1A56DB; line-height: 1; }
+  .score-circle .small { font-size: 0.65rem; color: #7A8DAA; }
+  .score-screen h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .score-screen p { font-size: 0.88rem; color: #5A6A85; margin-bottom: 1.4rem; }
+  .btn-restart {
+    background: #1A56DB;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-restart:hover { background: #1446B8; }
+</style>
+</head>
+<body>
+
+<div class="quiz-wrapper">
+  <div class="quiz-header">
+    <div class="tag">Clase 7</div>
+    <h1>Evaluación Formativa &amp; Retroalimentación</h1>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">Pregunta 1 de 5</div>
+
+  <div class="card" id="quizCard">
+
+    <!-- Questions injected here -->
+    <div id="questionArea">
+      <div class="card-top">
+        <div class="q-meta">
+          <span class="q-num-badge" id="qNumBadge">Q1</span>
+          <span class="q-topic" id="qTopic"></span>
+        </div>
+        <p class="stem" id="qStem"></p>
+      </div>
+      <div class="options" id="qOptions"></div>
+      <div class="feedback" id="qFeedback"></div>
+      <div class="card-bottom">
+        <button class="btn-next" id="btnNext">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- Score screen -->
+    <div class="score-screen" id="scoreScreen">
+      <div class="score-circle">
+        <span class="big" id="scoreNum">0</span>
+        <span class="small">/ 5</span>
+      </div>
+      <h2 id="scoreTitle"></h2>
+      <p id="scoreMsg"></p>
+      <button class="btn-restart" onclick="restartQuiz()">Reintentar</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    topic: "Formative use of data",
+    stem: "A teacher collects students' writing drafts mid-unit, reads them, and identifies that 70% of the class is not using cohesive devices (connectors like <em>first, then, finally</em>). She redesigns her next lesson to focus specifically on this gap before continuing with the unit. Which evaluation process does this illustrate?",
+    options: [
+      "A) Summative assessment — the teacher evaluates the final product of student writing.",
+      "B) Formative use of data — the teacher uses evidence collected during the learning process to adjust her teaching strategy and close the identified learning gap.",
+      "C) Diagnostic assessment — the teacher identifies what students know before starting the unit."
+    ],
+    correct: 1,
+    explanation: "<strong>Respuesta: B</strong> — La evaluación formativa no es un momento final — es un proceso continuo durante el aprendizaje. El aspecto clave es que la docente usa los datos recogidos para tomar una decisión pedagógica inmediata: rediseñar su siguiente clase. Eso es exactamente el uso formativo de los datos: reajustar las estrategias didácticas sobre la marcha. El diagnóstico (C) ocurre <em>antes</em> de iniciar la unidad, no a la mitad."
+  },
+  {
+    topic: "Metalinguistic feedback",
+    stem: "A student says: <em>\"She camed home late.\"</em> The teacher responds: <em>\"Think about the verb 'come' — is it regular or irregular?\"</em> The student pauses and self-corrects: <em>\"She came home late.\"</em> Which correction technique did the teacher use?",
+    options: [
+      "A) Recast — the teacher reformulated the utterance correctly without pointing out the error.",
+      "B) Metalinguistic feedback — the teacher gave a grammatical clue (regular or irregular?) without providing the correct form, guiding the student to retrieve and apply the rule.",
+      "C) Explicit correction — the teacher directly pointed out the error and gave the correct form."
+    ],
+    correct: 1,
+    explanation: "<strong>Respuesta: B</strong> — El metalinguistic feedback da una pista gramatical sin proporcionar la respuesta: <em>\"¿es regular o irregular?\"</em> activa el conocimiento previo del estudiante, permitiéndole llegar a la forma correcta por sí mismo. El recast (A) daría la forma correcta sin señalar el error. La corrección explícita (C) señalaría el error y daría la forma correcta directamente."
+  },
+  {
+    topic: "Elicitation",
+    stem: "A student writes: <em>\"I have seen him yesterday.\"</em> The teacher responds: <em>\"Hmm, you used 'have seen' — is this a present perfect or simple past situation? Think about the time marker...\"</em> The student replies: <em>\"Oh — I saw him yesterday!\"</em> Which correction technique does this illustrate?",
+    options: [
+      "A) Elicitation — the teacher guides the student to self-correct by asking a question that directs attention to the error without revealing the answer.",
+      "B) Metalinguistic feedback — the teacher gives a grammar rule hint without asking a question.",
+      "C) Recast — the teacher repeats the sentence with the correct form without commenting on the error."
+    ],
+    correct: 0,
+    explanation: "<strong>Respuesta: A</strong> — La elicitación guía al estudiante para que él mismo encuentre la forma correcta sin que el docente la proporcione. La pregunta <em>\"¿present perfect o simple past? Piensa en el marcador temporal\"</em> dirige la atención al error sin resolverlo. La diferencia con metalinguistic feedback (B) es que la elicitación usa preguntas que llevan al estudiante paso a paso, mientras que el metalinguistic feedback da solo una pista gramatical puntual."
+  },
+  {
+    topic: "Elementary feedback",
+    stem: "A teacher marks a student's essay with ticks (✓) and crosses (✗) next to each sentence, without any written explanation. The student receives the essay back and doesn't know why sentences were marked incorrect or what to do to improve. Which type of feedback does this represent?",
+    options: [
+      "A) Reflective feedback — the student must figure out what the errors are on their own.",
+      "B) Descriptive feedback — the teacher identified errors systematically throughout the text.",
+      "C) Elementary feedback — the teacher only indicates whether responses are correct or incorrect without explaining the reason or providing guidance for improvement."
+    ],
+    correct: 2,
+    explanation: "<strong>Respuesta: C</strong> — La retroalimentación elemental consiste únicamente en indicar si la respuesta es correcta o incorrecta (✓/✗) sin explicar el motivo. No genera reflexión porque el estudiante sabe que falló pero no sabe por qué ni cómo mejorar. La reflexiva (A) usaría preguntas orientadoras. La descriptiva (B) explicaría detalladamente qué está bien y qué mejorar."
+  },
+  {
+    topic: "Accuracy vs. Fluency — correction timing",
+    stem: "A teacher is conducting a controlled grammar drill on present perfect. A student produces: <em>\"I have went to Lima.\"</em> Which correction approach is most appropriate for this type of activity?",
+    options: [
+      "A) Take note of the error silently and address it at the end of the lesson with the whole class.",
+      "B) Use recast — respond naturally using the correct form without pointing out the error.",
+      "C) Use explicit correction — clearly indicate the error and provide the correct form immediately, since the purpose of the activity is accuracy practice."
+    ],
+    correct: 2,
+    explanation: "<strong>Respuesta: C</strong> — Durante actividades de <em>accuracy</em> (drills, práctica controlada), el docente sí corrige en el momento de forma focalizada en la estructura practicada. La corrección explícita es apropiada porque el propósito es precisamente la precisión gramatical con present perfect. La corrección diferida (A) y el recast (B) son más apropiados para actividades de fluidez."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  answered = false;
+
+  document.getElementById('qNumBadge').textContent = 'Q' + (idx + 1);
+  document.getElementById('qTopic').textContent = '';
+  document.getElementById('qStem').innerHTML = q.stem;
+
+  const optionsEl = document.getElementById('qOptions');
+  optionsEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="lbl">${['A','B','C'][i]})</span><span>${opt.replace(/^[ABC]\) /, '')}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    optionsEl.appendChild(btn);
+  });
+
+  const fb = document.getElementById('qFeedback');
+  fb.className = 'feedback';
+  fb.innerHTML = '';
+
+  document.getElementById('btnNext').classList.remove('show');
+
+  // Progress
+  const pct = (idx / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Pregunta ${idx + 1} de ${questions.length}`;
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach(b => b.disabled = true);
+
+  const isCorrect = chosen === q.correct;
+  if (isCorrect) score++;
+
+  btns[chosen].classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) btns[q.correct].classList.add('correct');
+
+  const fb = document.getElementById('qFeedback');
+  fb.innerHTML = q.explanation;
+  fb.className = 'feedback show' + (isCorrect ? '' : ' wrong-fb');
+
+  document.getElementById('btnNext').classList.add('show');
+}
+
+document.getElementById('btnNext').addEventListener('click', () => {
+  current++;
+  if (current < questions.length) {
+    renderQuestion(current);
+  } else {
+    showScore();
+  }
+});
+
+function showScore() {
+  document.getElementById('questionArea').style.display = 'none';
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressLabel').textContent = '¡Completado!';
+
+  const screen = document.getElementById('scoreScreen');
+  screen.classList.add('show');
+  document.getElementById('scoreNum').textContent = score;
+
+  const pct = (score / questions.length) * 100;
+  let title, msg;
+  if (pct === 100) {
+    title = '¡Perfecto! 🎉';
+    msg = 'Dominaste todos los conceptos de la Clase 7.';
+  } else if (pct >= 60) {
+    title = '¡Buen trabajo!';
+    msg = 'Repasa las preguntas que fallaste y vuelve a intentarlo.';
+  } else {
+    title = 'Sigue practicando';
+    msg = 'Revisa la teoría de la Clase 7 y vuelve a intentarlo.';
+  }
+  document.getElementById('scoreTitle').textContent = title;
+  document.getElementById('scoreMsg').textContent = msg;
+}
+
+function restartQuiz() {
+  current = 0;
+  score = 0;
+  document.getElementById('questionArea').style.display = 'block';
+  document.getElementById('scoreScreen').classList.remove('show');
+  renderQuestion(0);
+}
+
+renderQuestion(0);
+</script>
+</body>
+</html>
